@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Classic Notebook</title>
+    <style>
+        /* Dark Mode Glassmorphism Background */
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #13151a, #232732);
+            color: #e2e8f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Toolbar */
+        .toolbar {
+            width: 320px;
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            box-sizing: border-box;
+            z-index: 1000;
+            overflow-y: auto;
+            transition: left 0.3s ease;
+        }
+
+        .toolbar h2 {
+            margin-top: 0;
+            font-size: 1.4rem;
+            color: #a5b4fc;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .pen-colors {
+            display: flex;
+            gap: 12px;
+        }
+
+        .color-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .color-btn:hover { transform: translateY(-2px); }
+        .color-btn.active { border-color: #fff; transform: scale(1.1); box-shadow: 0 0 15px rgba(255,255,255,0.3); }
+
+        .btn-blue-color { background-color: #172061; }
+        .btn-black-color { background-color: #222222; }
+        .btn-red-color { background-color: #b01b1b; }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: #a5b4fc;
+        }
+
+        input[type="file"], input[type="number"] {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px dashed rgba(255,255,255,0.2);
+            color: #cbd5e1;
+            font-size: 0.85rem;
+            cursor: pointer;
+            outline: none;
+        }
+        
+        input[type="number"] {
+            border: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
+            width: 60px;
+            font-size: 1rem;
+        }
+
+        .action-buttons, .download-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-action {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            color: #cbd5e1;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+        }
+
+        .btn-action:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .btn-action:active { transform: scale(0.95); }
+
+        .btn-download {
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            flex: 1;
+        }
+
+        .btn-download:hover { background-color: #4338ca; }
+
+        /* Mobile Responsive UI Elements */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 900;
+            background: rgba(79, 70, 229, 0.9);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Welcome Popup */
+        .popup-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.4s ease;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .popup-box {
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 550px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            color: #e2e8f0;
+        }
+
+        .popup-box h1 { margin-top: 0; color: #a5b4fc; font-size: 1.8rem; }
+        .popup-box p { line-height: 1.6; color: #cbd5e1; font-size: 1rem; margin-bottom: 20px; }
+        .popup-box .features { text-align: left; background: rgba(0,0,0,0.2); padding: 15px 25px; border-radius: 8px; margin-bottom: 25px; font-size: 0.95rem; }
+        .popup-box .features span { color: #a5b4fc; font-weight: bold; }
+        
+        .btn-start {
+            background: #4f46e5; color: white; border: none; padding: 12px 30px; border-radius: 8px;
+            font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: background 0.2s;
+        }
+        .btn-start:hover { background: #4338ca; }
+
+        /* Workspace holding multiple pages */
+        .workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px;
+            overflow-y: auto;
+            gap: 40px; 
+        }
+
+        /* Classic Notebook Paper - Strict A4 Size */
+        .a4-paper {
+            width: 794px; 
+            height: 1123px; 
+            background-color: #ffffff;
+            background-image: linear-gradient(to bottom, transparent 27px, #aebad1 27px, #aebad1 28px);
+            background-size: 100% 28px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            display: flex;
+            color: #172061; 
+            font-size: 24px;
+            cursor: text; 
+            overflow: hidden; 
+            flex-shrink: 0;
+        }
+
+        .top-mask { position: absolute; top: 0; left: 0; right: 0; height: 118px; background-color: #ffffff; z-index: 0; }
+        .vertical-margin { position: absolute; left: 120px; top: 0; bottom: 0; width: 3px; border-left: 1.5px solid #c15077; border-right: 1.5px solid #c15077; z-index: 1; }
+        .horizontal-margin { position: absolute; top: 105px; left: 0; right: 0; height: 3px; border-top: 1.5px solid #c15077; border-bottom: 1.5px solid #c15077; z-index: 1; }
+
+        .page-box { position: absolute; top: 25px; right: 50px; width: 165px; border: 1.5px solid #c15077; border-radius: 8px; z-index: 2; background-color: #ffffff; display: flex; flex-direction: column; cursor: default; }
+        .page-box .row { height: 28px; display: flex; align-items: center; padding: 0 10px; font-family: Arial, sans-serif; font-size: 15px; color: #c15077; letter-spacing: 0.5px; }
+        .page-box .row.border-bottom { border-bottom: 1.5px solid #c15077; }
+
+        /* Text Columns */
+        .col-left { width: 120px; padding-left: 5px; padding-right: 5px; box-sizing: border-box; padding-top: 120px; z-index: 2; cursor: text; transition: padding 0.5s ease; }
+        .col-right { flex: 1; padding-left: 10px; padding-right: 5px; padding-top: 120px; z-index: 2; cursor: text; transition: padding 0.5s ease; }
+
+        .editable-area { min-height: 28px; max-height: 980px; outline: none; line-height: 28px; white-space: pre-wrap; word-wrap: break-word; position: relative; z-index: 2; -webkit-font-smoothing: antialiased; transform: translateY(-2px); }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 900px) {
+            .mobile-menu-btn { display: block; }
+            .toolbar { position: fixed; left: -320px; /* Hide off-screen */ }
+            .toolbar.open { left: 0; }
+            .mobile-overlay.active { display: block; opacity: 1; }
+            .workspace { 
+                padding: 80px 20px 20px 20px; /* Space for menu button */
+                align-items: flex-start; /* Allows smooth horizontal scrolling without clipping */
+            }
+            .a4-paper { margin: 0 auto; } /* Center paper while scrolling */
+        }
+
+        /* Print formatting */
+        @media print {
+            body { background: none; }
+            .toolbar, .mobile-menu-btn { display: none; }
+            .workspace { padding: 0; gap: 0; }
+            .a4-paper { box-shadow: none; margin: 0; width: 210mm; height: 297mm; border-radius: 0; page-break-after: always; }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+    <!-- Welcome Popup -->
+    <div class="popup-overlay" id="welcomePopup">
+        <div class="popup-box">
+            <h1>Welcome to Digital Notebook 📝</h1>
+            <p>A hyper-realistic, responsive notebook simulator with auto-pagination and organic handwriting emulation.</p>
+            
+            <div class="features">
+                <p><span>✨ Features:</span> Auto-pagination, click-anywhere to type, custom fonts, and high-res image exports.</p>
+                <p><span>🎲 Realism:</span> Click "Randomize Margins" to give your text natural, organic spacing!</p>
+                <br>
+                <p><span>⌨️ Keyboard Shortcuts:</span></p>
+                <ul style="margin: 5px 0; padding-left: 20px; color: #cbd5e1;">
+                    <li><b>Alt + 1 / 2 / 3</b> : Change Ink (Blue, Black, Red)</li>
+                    <li><b>Ctrl + Z</b> : Undo</li>
+                    <li><b>Ctrl + Y</b> : Redo</li>
+                </ul>
+            </div>
+
+            <button class="btn-start" onclick="closePopup()">Get Started</button>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Button & Overlay -->
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰ Menu</button>
+    <div class="mobile-overlay" id="mobileOverlay" onclick="toggleMobileMenu()"></div>
+
+    <div class="toolbar" id="sidebar">
+        <h2>Classic Notebook</h2>
+
+        <!-- Undo/Redo Buttons -->
+        <div class="control-group">
+            <label>History</label>
+            <div class="action-buttons">
+                <button class="btn-action" onmousedown="event.preventDefault(); document.execCommand('undo');" title="Undo (Ctrl+Z)">⟲ Undo</button>
+                <button class="btn-action" onmousedown="event.preventDefault(); document.execCommand('redo');" title="Redo (Ctrl+Y)">⟳ Redo</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>Ink Color</label>
+            <div class="pen-colors">
+                <div class="color-btn btn-blue-color active" id="btn-blue" onmousedown="changeColor('#172061', this, event)" title="Blue (Alt+1)"></div>
+                <div class="color-btn btn-black-color" id="btn-black" onmousedown="changeColor('#222222', this, event)" title="Black (Alt+2)"></div>
+                <div class="color-btn btn-red-color" id="btn-red" onmousedown="changeColor('#b01b1b', this, event)" title="Red (Alt+3)"></div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>Load Custom Font</label>
+            <input type="file" id="fontUpload" accept=".ttf, .otf, .woff">
+        </div>
+
+        <div class="control-group">
+            <label>Font Size & Alignment</label>
+            <input type="range" id="fontSize" min="18" max="45" value="24" title="Font Size">
+            <input type="range" id="yOffset" min="-20" max="20" value="-2" title="Vertical Alignment">
+        </div>
+
+        <!-- Randomize Margins Option -->
+        <div class="control-group">
+            <label>Realism</label>
+            <button class="btn-action" style="width: 100%; border: 1px solid #c15077;" onmousedown="event.preventDefault(); applyRandomMargins();" title="Randomly shuffle the left and right padding">
+                🎲 Randomize Margins
+            </button>
+        </div>
+
+        <!-- Export Options -->
+        <div class="control-group" style="margin-top: 10px;">
+            <label>Export Options</label>
+            <button class="btn-download" id="btn-download-all" onclick="downloadAllPages()" style="width: 100%;">Download All Pages</button>
+            <div class="download-row">
+                <input type="number" id="pageToDownload" min="1" max="1" value="1" title="Select Page Number">
+                <button class="btn-download" id="btn-download-single" onclick="downloadSinglePage()">Download Page</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- The workspace that holds pages -->
+    <div class="workspace" id="workspace">
+        <div class="a4-paper" id="paper-1">
+            <div class="top-mask"></div>
+            <div class="vertical-margin"></div>
+            <div class="horizontal-margin"></div>
+
+            <div class="page-box">
+                <div class="row border-bottom page-number-label">Page No. 1</div>
+                <div class="row">Date : &nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;/</div>
+            </div>
+
+            <div class="col-left">
+                <div class="editable-area" contenteditable="true">Q.1</div>
+            </div>
+
+            <div class="col-right">
+                <div class="editable-area" contenteditable="true">Welcome to your responsive notebook!
+If you are on a mobile device, swipe horizontally to read across the page, and tap the ☰ Menu button to access tools.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- POPUP & RESPONSIVE MENU LOGIC ---
+        function closePopup() {
+            const popup = document.getElementById('welcomePopup');
+            popup.style.opacity = '0';
+            setTimeout(() => { popup.style.display = 'none'; }, 400);
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('mobileOverlay').classList.toggle('active');
+        }
+
+        let pageCount = 1;
+        const MAX_HEIGHT = 980; 
+
+        // --- ORGANIC PADDING FUNCTIONALITY ---
+        function applyRandomMargins(targetPage = null) {
+            let pages = targetPage ? [targetPage] : document.querySelectorAll('.a4-paper');
+            pages.forEach(page => {
+                let colLeft = page.querySelector('.col-left');
+                let colRight = page.querySelector('.col-right');
+                
+                if(colLeft) {
+                    let qLeft = Math.floor(Math.random() * 10) + 2; 
+                    colLeft.style.paddingLeft = qLeft + 'px';
+                }
+                
+                if(colRight) {
+                    let ansLeft = Math.floor(Math.random() * 20) + 5; 
+                    let ansRight = Math.floor(Math.random() * 25) + 5; 
+                    colRight.style.paddingLeft = ansLeft + 'px';
+                    colRight.style.paddingRight = ansRight + 'px';
+                }
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            applyRandomMargins();
+        });
+
+        // Custom Font Upload
+        document.getElementById('fontUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const fontFace = new FontFace('CustomHandwriting', `url(${e.target.result})`);
+                    fontFace.load().then(function(loadedFace) {
+                        document.fonts.add(loadedFace);
+                        document.querySelectorAll('.editable-area').forEach(el => {
+                            el.style.fontFamily = 'CustomHandwriting, sans-serif';
+                        });
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Ink Color
+        function changeColor(color, btn, event) {
+            if (event) { event.preventDefault(); }
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.execCommand('styleWithCSS', false, true);
+            document.execCommand('foreColor', false, color);
+        }
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.altKey) {
+                if (e.key === '1') changeColor('#172061', document.getElementById('btn-blue'), e);
+                else if (e.key === '2') changeColor('#222222', document.getElementById('btn-black'), e);
+                else if (e.key === '3') changeColor('#b01b1b', document.getElementById('btn-red'), e);
+            }
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key.toLowerCase() === 'z') {
+                    e.preventDefault();
+                    if (e.shiftKey) { document.execCommand('redo'); } 
+                    else { document.execCommand('undo'); }
+                } else if (e.key.toLowerCase() === 'y') {
+                    e.preventDefault();
+                    document.execCommand('redo'); 
+                }
+            }
+        });
+
+        // Settings applied across all pages
+        document.getElementById('fontSize').addEventListener('input', function(e) {
+            const size = e.target.value + 'px';
+            document.querySelectorAll('.editable-area').forEach(el => el.style.fontSize = size);
+        });
+
+        document.getElementById('yOffset').addEventListener('input', function(e) {
+            const offset = e.target.value + 'px';
+            document.querySelectorAll('.editable-area').forEach(el => el.style.transform = `translateY(${offset})`);
+        });
+
+        function handlePaste(e) {
+            e.preventDefault();
+            const text = (e.originalEvent || e).clipboardData.getData('text/plain');
+            document.execCommand('insertText', false, text);
+            handleOverflow(e.target);
+        }
+
+        document.querySelectorAll('.editable-area').forEach(el => el.addEventListener('paste', handlePaste));
+
+        // Auto Pagination Logic
+        document.getElementById('workspace').addEventListener('input', function(e) {
+            if (e.target.classList.contains('editable-area')) {
+                handleOverflow(e.target);
+            }
+        });
+
+        function createNewPage() {
+            pageCount++;
+            document.getElementById('pageToDownload').max = pageCount;
+
+            let page = document.createElement('div');
+            page.className = 'a4-paper';
+            page.id = `paper-${pageCount}`;
+            page.innerHTML = `
+                <div class="top-mask"></div>
+                <div class="vertical-margin"></div>
+                <div class="horizontal-margin"></div>
+                <div class="page-box">
+                    <div class="row border-bottom page-number-label">Page No. ${pageCount}</div>
+                    <div class="row">Date : &nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;/</div>
+                </div>
+                <div class="col-left"><div class="editable-area" contenteditable="true"></div></div>
+                <div class="col-right"><div class="editable-area" contenteditable="true"></div></div>
+            `;
+            
+            let size = document.getElementById('fontSize').value + 'px';
+            let offset = document.getElementById('yOffset').value + 'px';
+            let currentFont = document.querySelector('.editable-area').style.fontFamily;
+
+            page.querySelectorAll('.editable-area').forEach(el => {
+                el.style.fontSize = size;
+                el.style.transform = `translateY(${offset})`;
+                if(currentFont) el.style.fontFamily = currentFont;
+                el.addEventListener('paste', handlePaste);
+            });
+
+            applyRandomMargins(page);
+            return page;
+        }
+
+        function moveLastWordOrNode(source, target) {
+            let last = source.lastChild;
+            if (!last) return false;
+
+            if (last.nodeType === Node.TEXT_NODE) {
+                let text = last.textContent;
+                let match = text.match(/([\s\S]*?)(\S+\s*)$/);
+                if (match && match[1].length > 0) {
+                    last.textContent = match[1];
+                    let movedText = match[2];
+                    
+                    if (target.firstChild && target.firstChild.nodeType === Node.TEXT_NODE) {
+                        target.firstChild.textContent = movedText + target.firstChild.textContent;
+                    } else {
+                        target.insertBefore(document.createTextNode(movedText), target.firstChild);
+                    }
+                    return true;
+                } else {
+                    target.insertBefore(last, target.firstChild);
+                    return true;
+                }
+            } else if (last.nodeType === Node.ELEMENT_NODE) {
+                if (last.tagName === 'BR') {
+                    target.insertBefore(last, target.firstChild);
+                    return true;
+                }
+                
+                if (last.childNodes.length > 0) {
+                    let wrapper;
+                    let targetFirst = target.firstChild;
+                    if (targetFirst && targetFirst.nodeType === Node.ELEMENT_NODE && targetFirst.tagName === last.tagName && targetFirst.color === last.color) {
+                        wrapper = targetFirst;
+                    } else {
+                        wrapper = last.cloneNode(false);
+                        target.insertBefore(wrapper, target.firstChild);
+                    }
+                    
+                    let moved = moveLastWordOrNode(last, wrapper);
+                    if (last.childNodes.length === 0) source.removeChild(last);
+                    if (wrapper.childNodes.length === 0) target.removeChild(wrapper);
+                    return moved;
+                } else {
+                    target.insertBefore(last, target.firstChild);
+                    return true;
+                }
+            }
+            target.insertBefore(last, target.firstChild);
+            return true;
+        }
+
+        function handleOverflow(area) {
+            if (area.scrollHeight <= MAX_HEIGHT) return;
+            
+            let paper = area.closest('.a4-paper');
+            let nextPage = paper.nextElementSibling;
+            if (!nextPage) {
+                nextPage = createNewPage();
+                document.getElementById('workspace').appendChild(nextPage);
+            }
+            
+            let isRight = area.parentElement.classList.contains('col-right');
+            let nextArea = isRight ? nextPage.querySelector('.col-right .editable-area') : nextPage.querySelector('.col-left .editable-area');
+            let hadFocus = document.activeElement === area;
+            
+            let safety = 1000;
+            while (area.scrollHeight > MAX_HEIGHT && safety > 0) {
+                let moved = moveLastWordOrNode(area, nextArea);
+                if (!moved) break;
+                safety--;
+            }
+            
+            if (hadFocus) {
+                let range = document.createRange();
+                range.selectNodeContents(nextArea);
+                range.collapse(false);
+                let sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+                nextArea.focus();
+            }
+            
+            if (nextArea.scrollHeight > MAX_HEIGHT) {
+                handleOverflow(nextArea);
+            }
+        }
+
+        // Global Click Anywhere to Write
+        document.getElementById('workspace').addEventListener('click', function(e) {
+            if (e.target.closest('.editable-area')) return;
+
+            let textArea = null;
+            if (e.target.closest('.col-left')) {
+                textArea = e.target.closest('.col-left').querySelector('.editable-area');
+            } else if (e.target.closest('.col-right')) {
+                textArea = e.target.closest('.col-right').querySelector('.editable-area');
+            }
+
+            if (textArea) {
+                const rect = textArea.getBoundingClientRect();
+                const clickY = e.clientY - rect.bottom;
+                
+                if (clickY > 0) {
+                    const lineHeight = 28; 
+                    const linesToAdd = Math.ceil(clickY / lineHeight);
+                    
+                    for (let i = 0; i < linesToAdd; i++) {
+                        let div = document.createElement('div');
+                        div.appendChild(document.createElement('br'));
+                        textArea.appendChild(div);
+                    }
+                    handleOverflow(textArea); 
+                }
+                
+                textArea.focus();
+                
+                if (typeof window.getSelection !== "undefined" && typeof document.createRange !== "undefined") {
+                    const range = document.createRange();
+                    range.selectNodeContents(textArea);
+                    range.collapse(false);
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+            }
+        });
+
+        // Export functionality
+        async function exportPageToImage(pageElement, pageIndex) {
+            const originalShadow = pageElement.style.boxShadow;
+            pageElement.style.boxShadow = 'none';
+            
+            try {
+                const canvas = await html2canvas(pageElement, { scale: 2, backgroundColor: '#ffffff' });
+                const link = document.createElement('a');
+                link.download = `Notebook_Page_${pageIndex}.png`;
+                link.href = canvas.toDataURL('image/png');
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (error) {
+                console.error("Error generating image:", error);
+                alert(`There was an error generating Page ${pageIndex}.`);
+            }
+            
+            pageElement.style.boxShadow = originalShadow;
+        }
+
+        async function downloadAllPages() {
+            const btn = document.getElementById('btn-download-all');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+
+            const pages = document.querySelectorAll('.a4-paper');
+            if (pages.length > 1) {
+                alert("Downloading multiple pages. If your browser asks for permission to 'Download multiple files', please click 'Allow'!");
+            }
+
+            for (let i = 0; i < pages.length; i++) {
+                btn.innerText = `Saving Page ${i + 1}/${pages.length}...`;
+                await exportPageToImage(pages[i], i + 1);
+                await new Promise(r => setTimeout(r, 1000));
+            }
+
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+
+        async function downloadSinglePage() {
+            const pageNum = parseInt(document.getElementById('pageToDownload').value);
+            const pageElement = document.getElementById(`paper-${pageNum}`);
+            
+            if (!pageElement) {
+                alert(`Page ${pageNum} does not exist yet!`);
+                return;
+            }
+
+            const btn = document.getElementById('btn-download-single');
+            const originalText = btn.innerText;
+            btn.innerText = "Wait...";
+            btn.disabled = true;
+
+            await exportPageToImage(pageElement, pageNum);
+
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>
